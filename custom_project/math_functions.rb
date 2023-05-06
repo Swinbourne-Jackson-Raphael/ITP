@@ -2,6 +2,24 @@
 # 104634814@student.swin.edu.au
 # Swinbourne University ITP-TP1-2023
 
+# GENERAL MATH FUNCTIONS
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# Square a given number
+def squared(number)
+    return number * number
+end
+
+
+# VECTOR FUNCTIONS
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# Distance between two 2D vectors
+def vec2D_distance(v1, v2) 
+    return Math.sqrt(squared(v2[0] - v1[0]) + squared(v2[1] - v1[1]))
+end
+
+
 # TRIG FUNCTIONS
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -31,4 +49,3 @@ end
 def rel_vel_to_world_vel(v1, v2)
     return v1 + v2
 end
-
