@@ -34,6 +34,7 @@ def rads_to_deg(angle)
 end
 
 # Calculate a directional 2D vector from a radian angle.
+# An angle of 0 points to the right of the screen.
 def angle_to_dir_vector(angle)
     x = Math.cos(angle)
     y = Math.sin(angle)
