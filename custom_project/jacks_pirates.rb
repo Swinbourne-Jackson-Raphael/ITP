@@ -53,10 +53,13 @@ class DemoWindow < Gosu::Window
       while j < @game_obj_buffer.length
         obj = @game_obj_buffer[i]
         other = @game_obj_buffer[j]
-        if obj.collider.check_collision(other.collider)
-          puts("Collision!")
-          obj.on_collision("Placeholder for collision object when I make that")
-          other.on_collision("Placeholder for collision object when I make that")
+        collision = obj.collider.check_collision(other.collider)
+        if collision
+          puts("Collision! between collider at |x:#{collision.collider_1.pos[0].floor} y:#{collision.collider_1.pos[1].floor} r: #{collision.collider_1.radius}| & |x:#{collision.collider_2.pos[0].floor} y:#{collision.collider_2.pos[1].floor} r:#{collision.collider_2.radius}|  distance: #{vec2D_distance(collision.collider_1.pos, collision.collider_2.pos).floor(2)}")
+          collision.collider_1.debug_colour = Gosu::Color::GREEN
+          collision.collider_2.debug_colour = Gosu::Color::GREEN
+          obj.on_collision(collision)
+          other.on_collision(collision)
         end
         
         j+=1

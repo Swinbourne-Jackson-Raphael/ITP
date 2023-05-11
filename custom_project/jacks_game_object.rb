@@ -42,13 +42,13 @@ class GameObject
   
     def draw
       @sprite.draw_rot(@position[0], @position[1], @z_order, @rotation, 0.5, 0.5, @scale[0], @scale[1])
-      draw_debug()
+      draw_debug
     end
   
     def draw_debug
-        @info_font.draw_text("position: x:#{@position[0].floor(2)}, y:#{@position[1].floor(2)}", @position[0], @position[1] + 30, ZOrder::TOP, 1.0, 1.0, Gosu::Color::BLACK)
-        @info_font.draw_text("rotation: #{@rotation.floor(2)}°", @position[0], @position[1] + 40, ZOrder::TOP, 1.0, 1.0, Gosu::Color::BLACK)
-        @info_font.draw_text("velocity: x:#{@velocity[0].floor(2)}, y:#{@velocity[1].floor(2)}", @position[0], @position[1] + 50, ZOrder::TOP, 1.0, 1.0, Gosu::Color::BLACK)
+        #@info_font.draw_text("position: x:#{@position[0].floor(2)}, y:#{@position[1].floor(2)}", @position[0], @position[1] + 30, ZOrder::TOP, 1.0, 1.0, Gosu::Color::BLACK)
+        #@info_font.draw_text("rotation: #{@rotation.floor(2)}°", @position[0], @position[1] + 40, ZOrder::TOP, 1.0, 1.0, Gosu::Color::BLACK)
+        #@info_font.draw_text("velocity: x:#{@velocity[0].floor(2)}, y:#{@velocity[1].floor(2)}", @position[0], @position[1] + 50, ZOrder::TOP, 1.0, 1.0, Gosu::Color::BLACK)
         @collider.draw_debug
     end
   
@@ -78,9 +78,9 @@ class GameObject
 
     def generate_collider
         c_colliders = Array.new()
-        c_colliders << CircleCollider.new(@position, 12, self)
-        c_colliders << CircleCollider.new(@position - Vector[15, 0], 10, self)
-        c_colliders << CircleCollider.new(@position - Vector[-15, 0], 10, self)
+        c_colliders << CircleCollider.new(@position, 13, self)
+        c_colliders << CircleCollider.new(@position - Vector[15, 0], 12, self)
+        c_colliders << CircleCollider.new(@position - Vector[-15, 0], 12, self)
         return Collider.new(c_colliders)
     end
 
@@ -90,9 +90,9 @@ class GameObject
   
     def fireCannons(port_or_starboard)
       cb_speed = 10;
-      sh = (@sprite.height * @scale[0]).floor - 10
-      cb = Cannonball.new(@cb_sprite, Vector[0.08, 0.08], ZOrder::MIDDLE, @position + right * port_or_starboard * sh, 0, Vector[0,0], game_obj_buffer)
-      #cb.velocity = right() * port_or_starboard * cb_speed + @velocity
+      sh = (@sprite.height * @scale[0]).floor - 8
+      cb = Cannonball.new(@cb_sprite, Vector[0.08, 0.08], ZOrder::MIDDLE, @position + (right * port_or_starboard) * sh, 0, Vector[0,0], game_obj_buffer)
+      cb.velocity = right() * port_or_starboard * cb_speed + @velocity
       @game_obj_buffer << cb
     end
   end

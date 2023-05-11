@@ -5,9 +5,19 @@ require 'matrix'
 require './jacks_math'
 require './jacks_shapes'
 
+class Collision
+
+  attr_reader :collider_1, :collider_2
+
+  def initialize(collider_1, collider_2)
+    @collider_1 = collider_1
+    @collider_2 = collider_2
+  end
+
+end
 
 class CircleCollider
-  attr_accessor :radius, :attached_obj
+  attr_accessor :radius, :attached_obj, :debug_colour
 
   # Calculate current position using attached obj current pos, direction, and offset.
   def pos
@@ -19,13 +29,15 @@ class CircleCollider
     @attached_obj = attached_obj
     @offset = @attached_obj.position - start_pos
     @debug_img = Gosu::Image.new(Circle.new(@radius))
+    @debug_colour = Gosu::Color::RED
   end
 
-  def check_collision(other) squared(other.pos[0] - pos[0]) + squared(other.pos[1] - pos[1]) < squared(@radius + other.radius) ? true : false end
+  def check_collision(other) squared(other.pos[0] - pos[0]) + squared(other.pos[1] - pos[1]) < squared(@radius + other.radius) ? Collision.new(self, other) : false end
+
 
   # Draw a red circle representing this collider
   def draw_debug
-    @debug_img.draw(pos[0], pos[1], ZOrder::MIDDLE, 1, 1, Gosu::Color::RED)
+    @debug_img.draw(pos[0], pos[1], ZOrder::MIDDLE, 1, 1, @debug_colour)
   end
 
 end
@@ -45,12 +57,13 @@ class Collider
     while i < @circle_colliders.length
       j = 0
       while j < other.circle_colliders.length
-        return true if @circle_colliders[i].check_collision(other.circle_colliders[j])
+        collission = @circle_colliders[i].check_collision(other.circle_colliders[j])
+        return collission if collission
         j+=1
       end
       i+=1
     end
-    
+    return collission
   end
 
   # Call the draw debug function of all circle colliders in this collider
