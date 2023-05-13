@@ -21,7 +21,7 @@ class CircleCollider
 
   # Calculate current position using attached obj current pos, direction, and offset.
   def pos
-    return @attached_obj.position - (@attached_obj.forward * @offset[0]) - (@attached_obj.right * @offset[1]) - Vector[@radius,@radius]
+    return @attached_obj.position - (@attached_obj.forward * @offset[0]) - (@attached_obj.right * @offset[1])
   end
 
   def initialize (start_pos, radius, attached_obj)
@@ -32,12 +32,21 @@ class CircleCollider
     @debug_colour = Gosu::Color::RED
   end
 
-  def check_collision(other) squared(other.pos[0] - pos[0]) + squared(other.pos[1] - pos[1]) < squared(@radius + other.radius) ? Collision.new(self, other) : false end
+  #def check_collision(other) squared(other.pos[0] - pos[0]) + squared(other.pos[1] - pos[1]) < squared(@radius + other.radius) ? Collision.new(self, other) : false end
+  def check_collision(other) 
+    dist_squared = squared(other.pos[0] - pos[0]) + squared(other.pos[1] - pos[1])
+    if(dist_squared < squared(@radius + other.radius))
+      return Collision.new(self, other)
+    else
+      return false
+    end
+    
+  end
 
 
   # Draw a red circle representing this collider
   def draw_debug
-    @debug_img.draw(pos[0], pos[1], ZOrder::MIDDLE, 1, 1, @debug_colour)
+    @debug_img.draw(pos[0] - radius, pos[1] - radius, ZOrder::MIDDLE, 1, 1, @debug_colour)
   end
 
 end
