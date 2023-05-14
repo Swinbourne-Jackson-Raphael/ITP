@@ -1,6 +1,3 @@
-Neil Diamond
-Greatest Hits
-1
 3
 Crackling Rose
 sounds/01-Cracklin-rose.wav
