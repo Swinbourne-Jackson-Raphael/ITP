@@ -105,15 +105,18 @@ end
 # Prompts user to provide a filepath to the file storing the albums
 def menu_read_in_albums()
     puts('Enter the file path to the file you wish to read albums from.')
+    filepath = gets.chomp()
+    music_file = File.new(filepath, "r")
+    @albums = read_albums(music_file)
+    music_file.close()
 end
 
 # Displays available albums
-def menu_display_albums(albums)
+def menu_display_albums()
     i = 0
-    while i < albums.length()
+    while i < @albums.length()
         puts("\nAlbum ID: #{i+1}")
-        albums[i].print()
-        i += 
+        @albums[i].print()
         i+=1
     end
 end
@@ -152,6 +155,10 @@ end
 
 # Prints the main menu to the terminal
 def menu_main()
+    music_file = File.new("albums.txt", "r")
+    @albums = read_albums(music_file)
+    music_file.close()
+
     finished = false
     begin
         puts('Main Menu:')
@@ -185,7 +192,8 @@ def main()
     albums = read_albums(music_file)
     music_file.close()
 
-    menu_display_albums(albums)
+    menu_main()
+    
 end
     
 main()
