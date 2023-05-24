@@ -85,6 +85,7 @@ def read_album(music_file)
     return album
 end
 
+# Returns an array of albums read from the given file
 def read_albums(music_file)
     count = music_file.gets().to_i()
     albums = Array.new()
@@ -113,12 +114,51 @@ end
 
 # Displays available albums
 def menu_display_albums()
-    i = 0
-    while i < @albums.length()
-        puts("\nAlbum ID: #{i+1}")
-        @albums[i].print()
-        i+=1
-    end
+    finished = false
+    begin
+        puts('')
+        puts('Display Menu:')
+        puts('1) Display all albums')
+        puts('2) Search by genre')
+        puts('3) Back')
+        choice = read_integer_in_range("Please enter your choice:", 1, 3)
+        case choice
+        when 1
+            i = 0
+            while i < @albums.length()
+                puts("\nAlbum ID: #{i+1}")
+                @albums[i].print()
+                i+=1
+            end
+        when 2
+            genres = ''
+            i = 1
+            while i < $genre_names.length()
+                genres += $genre_names[i] + ' | '
+                i += 1
+            end
+            puts('Please enter a genre name. | ' + genres)
+            genre = gets.chomp()
+
+            if $genre_names.include?(genre)
+                i = 0
+                while i < @albums.length()
+                    if $genre_names[@albums[i].genre] == genre
+                        puts("\nAlbum ID: #{i+1}")
+                        @albums[i].print()
+                    end          
+                    i+=1
+                end
+            else
+                puts('Invalid genre.')
+            end
+
+        when 3
+            finished = true;
+        else
+            puts('Please select again')
+        end
+    end until finished
 end
 
 # Prompts user to select an album for playback
