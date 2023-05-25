@@ -50,3 +50,16 @@ end
 
 main
 =end
+
+# Jacksons extended input functions
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+def input_menu(heading, prompt, options)
+	puts("\n---------------\n" + heading)
+	i = 0
+	while i < options.length
+		puts("#{i+1}) " + options[i])
+		i+=1
+	end
+	return read_integer_in_range(prompt, 1, options.length)
+end
