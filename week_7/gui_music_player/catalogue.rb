@@ -18,6 +18,7 @@ class Catalogue
         # Load the albums stored at given filepath
         music_file = File.new(filepath, "r")
         @albums = read_albums(music_file)
+        music_file.close()
     end
 
     # Returns an array of albums that match given genre
@@ -61,8 +62,8 @@ class Catalogue
 
     # Reads in and returns a single track from the given file
     def read_track(music_file)
-        name = music_file.gets()
-        location = music_file.gets()
+        name = music_file.gets().chomp()
+        location = music_file.gets().chomp()
         track = Track.new(name, location)
         return track
     end

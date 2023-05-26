@@ -2,6 +2,7 @@ require 'rubygems'
 require 'gosu'
 
 require './catalogue.rb'
+require './gosu_gui.rb'
 
 TOP_COLOR = Gosu::Color.new(0xFF1EB1FA)
 BOTTOM_COLOR = Gosu::Color.new(0xFF1D4DB5)
@@ -17,14 +18,6 @@ end
 GENRE_NAMES = ['Null', 'Pop', 'Classic', 'Jazz', 'Rock']
 
 
-class ArtWork
-	attr_accessor :bmp
-
-	def initialize (file)
-		@bmp = Gosu::Image.new(file)
-	end
-end
-
 # Put your record definitions here
 class MusicPlayerMain < Gosu::Window
 
@@ -32,13 +25,31 @@ class MusicPlayerMain < Gosu::Window
         super 600, 800
         self.caption = "Music Player"
 
-        catalogue = Catalogue.new("albums.txt")
-        catalogue.print
+        @track_font = Gosu::Font.new(10)
+        @catalogue = Catalogue.new("albums.txt")
+        @catalogue.print
+
+        playTrack(1, @catalogue.albums[0])
+    end
+
+    # Draws the artwork for a given album at a given position and scale
+    def draw_album(album, x, y, s) 
+        album.cover.draw(x, y, ZOrder::UI, s, s)
+        i = 0
+        while i < album.tracks.length
+            display_track(album.tracks[i].name, x, y + 500 + (i*10))
+            i += 1
+        end
     end
 
     # Draws the artwork on the screen for all the albums
-    def draw_albums albums
-        # complete this code
+    def draw_albums(albums)
+
+        i = 0
+        while i < albums.length
+            draw_album(albums[i], 10, 10, 1)
+            i += 1
+        end
     end
 
     # Detects if a 'mouse sensitive' area has been clicked on
@@ -51,8 +62,8 @@ class MusicPlayerMain < Gosu::Window
 
     # Takes a String title and an Integer ypos
     # You may want to use the following:
-    def display_track(title, ypos)
-        @track_font.draw(title, TrackLeftX, ypos, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
+    def display_track(title, xpos, ypos)
+        @track_font.draw_text(title, xpos, ypos, ZOrder::PLAYER, 1.0, 1.0, Gosu::Color::BLACK)
     end
 
 
@@ -61,14 +72,11 @@ class MusicPlayerMain < Gosu::Window
         # complete the missing code
         @song = Gosu::Song.new(album.tracks[track].location)
         @song.play(false)
-        # Uncomment the following and indent correctly:
-        #	end
-        # end
     end
 
     # Draw a coloured background using TOP_COLOR and BOTTOM_COLOR
     def draw_background
-
+        draw_quad(0, 0, TOP_COLOR, 600, 0, TOP_COLOR, 0, 800, BOTTOM_COLOR, 600, 800, BOTTOM_COLOR, ZOrder::BACKGROUND)
     end
 
     # Not used? Everything depends on mouse actions.
@@ -79,12 +87,12 @@ class MusicPlayerMain < Gosu::Window
 	def draw
 		# Complete the missing code
 		draw_background
+        draw_album(@catalogue.albums[0], 50, 50, 1)
+        #draw_albums(@catalogue.albums)
 	end
 
  	def needs_cursor?; true; end
 
-	# If the button area (rectangle) has been clicked on change the background color
-	# also store the mouse_x and mouse_y attributes that we 'inherit' from Gosu
 	def button_down(id)
 		case id
 	    when Gosu::MsLeft
