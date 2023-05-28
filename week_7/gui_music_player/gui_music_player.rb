@@ -30,6 +30,10 @@ class MusicPlayerMain < Gosu::Window
         @catalogue.print
 
         playTrack(1, @catalogue.albums[0])
+
+        @gui_buffer = Array.new()
+
+        draw_album(@catalogue.albums[0], 50, 50, 1)
     end
 
     # Draws the artwork for a given album at a given position and scale
@@ -37,6 +41,7 @@ class MusicPlayerMain < Gosu::Window
         album.cover.draw(x, y, ZOrder::UI, s, s)
         i = 0
         while i < album.tracks.length
+
             display_track(album.tracks[i].name, x, y + 500 + (i*10))
             i += 1
         end
@@ -79,16 +84,13 @@ class MusicPlayerMain < Gosu::Window
         draw_quad(0, 0, TOP_COLOR, 600, 0, TOP_COLOR, 0, 800, BOTTOM_COLOR, 600, 800, BOTTOM_COLOR, ZOrder::BACKGROUND)
     end
 
-    # Not used? Everything depends on mouse actions.
-	def update
-	end
-
     # Draws the album images and the track list for the selected album
 	def draw
 		# Complete the missing code
-		draw_background
-        draw_album(@catalogue.albums[0], 50, 50, 1)
+		draw_background()
+
         #draw_albums(@catalogue.albums)
+        @gui_buffer.each(&:draw)
 	end
 
  	def needs_cursor?; true; end
