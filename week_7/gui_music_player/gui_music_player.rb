@@ -33,7 +33,7 @@ class MusicPlayerMain < Gosu::Window
 
         @gui_buffer = Array.new()
 
-        draw_album(@catalogue.albums[0], 50, 50, 1)
+        
     end
 
     # Draws the artwork for a given album at a given position and scale
@@ -90,7 +90,8 @@ class MusicPlayerMain < Gosu::Window
 		draw_background()
 
         #draw_albums(@catalogue.albums)
-        @gui_buffer.each(&:draw)
+        #@gui_buffer.each(&:draw)
+        draw_album(@catalogue.albums[0], 50, 50, 1)
 	end
 
  	def needs_cursor?; true; end
