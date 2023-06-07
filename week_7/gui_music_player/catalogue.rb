@@ -7,15 +7,14 @@ module IPrintable
     end 
 end
 
-
-# Container class for a collection of albums. 
+# Container class for a collection of albums with various sorting methods.
+# Better encapsulation
 class Catalogue
     include IPrintable
     attr_accessor :albums
 
+    # Load the albums stored at given filepath
     def initialize (filepath)
-
-        # Load the albums stored at given filepath
         music_file = File.new(filepath, "r")
         @albums = read_albums(music_file)
         music_file.close()
@@ -85,7 +84,7 @@ class Catalogue
     def read_album(music_file)
         album_artist = artist = music_file.gets().chomp()
         album_title = music_file.gets().chomp()
-        album_cover = Gosu::Image.new(music_file.gets().chomp())
+        album_cover = music_file.gets().chomp()
         album_genre = music_file.gets().to_i()
         tracks = read_tracks(music_file)
         album = Album.new(album_artist, album_title, album_cover, album_genre, tracks)
