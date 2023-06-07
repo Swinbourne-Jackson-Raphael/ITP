@@ -54,22 +54,22 @@ end
 
 def move_left hunter
   hunter.x -= hunter.vel_x
-  hunter.x %= SCREEN_HEIGHT
+  hunter.x %= SCREEN_WIDTH
 end
 
 def move_right hunter
   hunter.x += hunter.vel_x
-  hunter.x %= SCREEN_HEIGHT
+  hunter.x %= SCREEN_WIDTH
 end
 
 def move_up hunter
   hunter.y -= hunter.vel_y
-  hunter.y %= SCREEN_WIDTH
+  hunter.y %= SCREEN_HEIGHT
 end
 
 def move_down hunter
   hunter.y += hunter.vel_y
-  hunter.y %= SCREEN_WIDTH
+  hunter.y %= SCREEN_HEIGHT
 end
 
 def draw_hunter hunter
@@ -97,7 +97,7 @@ end
 
 class Food
 
-  attr_accessor :x, :y, :type, :image, :vel_x, :vel_y, :angle, :x, :y, :score
+  attr_accessor :x, :y, :type, :image, :vel_x, :vel_y, :angle, :x, :y, :score, :smoking, :smoke_image, :smoke_time
 
   def initialize(image, type)
     @type = type;
@@ -105,6 +105,9 @@ class Food
     @vel_x = rand(-2 .. 2)  # rand(1.2 .. 2.0)
     @vel_y = rand(-2 .. 2)
     @angle = 0.0
+    @smoking = false
+    @smoke_image = Gosu::Image.new("media/smoke.png")
+    @smoke_time = 0
 
     @x = rand * SCREEN_WIDTH
     @y = rand * SCREEN_HEIGHT
@@ -114,13 +117,14 @@ end
 
 def move food
   food.x += food.vel_x
-  food.x %= SCREEN_HEIGHT
+  food.x %= SCREEN_WIDTH
   food.y += food.vel_y
-  food.y %= SCREEN_WIDTH
+  food.y %= SCREEN_HEIGHT
 end
 
 def draw_food food
   food.image.draw_rot(food.x, food.y, ZOrder::FOOD, food.angle)
+  food.smoke_image.draw_rot(food.x, food.y, ZOrder::FOOD, food.angle) if food.smoking
 end
 
 
@@ -129,7 +133,7 @@ class FoodHunterGame < (Example rescue Gosu::Window)
 
     # replace hard coded values with global constants:
 
-    super SCREEN_HEIGHT, SCREEN_WIDTH
+    super SCREEN_WIDTH, SCREEN_HEIGHT
     self.caption = "Food Hunter Game"
 
     @background_image = Gosu::Image.new("media/space.png", :tileable => true)
@@ -143,6 +147,7 @@ class FoodHunterGame < (Example rescue Gosu::Window)
     warp(@player, 320, 240)
 
     @font = Gosu::Font.new(20)
+
   end
 
   def update
@@ -164,9 +169,10 @@ class FoodHunterGame < (Example rescue Gosu::Window)
 
     @all_food.each { |food| move food }
 
-    self.remove_food
 
     collect_food(@all_food, @player)
+
+    self.remove_food
 
    # the following will generate new food randomly as update is called each timestep
    if rand(100) < 2 and @all_food.size < 4
@@ -188,12 +194,29 @@ class FoodHunterGame < (Example rescue Gosu::Window)
      end
    end
 
-   #change direction of a random food object at random intervals
-   if rand(100) == 0
-    select = rand(@all_food.length - 1) # select rand food item on screen
-    @all_food[select].vel_x = rand(-2 .. 2)
-    @all_food[select].vel_y = rand(-2 .. 2)  
-   end
+
+    # Get the elapsed milliseconds since the program started
+    elapsed_time = Gosu.milliseconds
+
+    # Randomly select food to start smoking
+    if rand(75) == 0 && @all_food.length > 0
+      
+      @select = @all_food[rand(0..(@all_food.length - 1))]
+      @select.smoking = true
+      @select.smoke_time = elapsed_time
+    end
+
+    # Change direction of all food that has been smoking for a second
+    @all_food.each do |food|
+      if food.smoking
+        if (elapsed_time - food.smoke_time) >= 1000 # food has been smoking for a second
+          food.vel_x = rand(-2..2)
+          food.vel_y = rand(-2..2)
+          food.smoking = false
+        end
+      end
+    end
+
  end
 
 
@@ -202,7 +225,7 @@ class FoodHunterGame < (Example rescue Gosu::Window)
     @background_image.draw(0, 0, ZOrder::BACKGROUND)
     draw_hunter @player
     @all_food.each { |food| draw_food food }
-    @font.draw("Score: #{@player.score}", 10, 10, ZOrder::UI, 1.0, 1.0, Gosu::Color::YELLOW)
+    @font.draw_text("Score: #{@player.score}", 10, 10, ZOrder::UI, 1.0, 1.0, Gosu::Color::YELLOW)
   end
 
   def generate_food
