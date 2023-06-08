@@ -14,7 +14,7 @@ Platters
 Greatest Hits
 images/platters_greatest_hits_cover.jpg
 1
-2S
+2
 Twilight Time
 sounds/01-Twilight_Time.wav
 The Great Pretender
