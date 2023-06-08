@@ -174,7 +174,7 @@ class MusicPlayerMain < Gosu::Window
     @album_x = 50
     @album_y = 50
     @track_x = 50
-    @track_y = 570
+    @track_y = 300
   end
 
   def initialize_album_grid
@@ -196,13 +196,14 @@ class MusicPlayerMain < Gosu::Window
     color = playing ? Gosu::Color::YELLOW : Gosu::Color::WHITE
     @track_font.draw_text(title, xpos, ypos, ZOrder::PLAYER, 1.0, 1.0, color)
   end
-
+  
   def draw_album(album)
     draw_back_button
     cover_img = Gosu::Image.new(album.cover)
-    cover_img.draw(@album_x, @album_y, ZOrder::UI, 1, 1)
+    cover_img.draw(@album_x, @album_y, ZOrder::UI, 0.5, 0.5)
+  
     album.tracks.each_with_index do |track, index|
-      ypos = @track_y + index * 30
+      ypos = @track_y + index * (@track_font.height + 5)
       playing = @current_track_index == index
       draw_track(track.name, @track_x, ypos, playing)
     end
