@@ -1,6 +1,12 @@
 require 'rubygems'
 require 'gosu'
 
+SCREEN_WIDTH = 600
+SCREEN_HEIGHT = 800
+ALBUM_WIDTH = 250
+ALBUM_HEIGHT = 250
+ALBUM_SPACING = 20
+GENRE_NAMES = ['Null', 'Pop', 'Classic', 'Jazz', 'Rock']
 TOP_COLOR = Gosu::Color.new(0xFF1EB1FA)
 BOTTOM_COLOR = Gosu::Color.new(0xFF1D4DB5)
 
@@ -11,8 +17,6 @@ end
 module Genre
   POP, CLASSIC, JAZZ, ROCK = *1..4
 end
-
-GENRE_NAMES = ['Null', 'Pop', 'Classic', 'Jazz', 'Rock']
 
 module IPrintable
   def print
@@ -125,23 +129,55 @@ class Track
 end
 
 class MusicPlayerMain < Gosu::Window
+
+  # CORE GOSU METHODS 
+  # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   def initialize
     super(600, 800)
     self.caption = "Music Player"
+    initialize_fonts
+    initialize_variables
+    initialize_positions
+  end
 
+  def needs_cursor?
+    true
+  end
+
+  def button_down(id)
+    case id
+    when Gosu::MsLeft
+      handle_left_mouse_button
+    end
+  end
+
+  def draw
+    draw_background
+    draw_content
+  end
+
+  private
+
+  def initialize_fonts
+    @album_font = Gosu::Font.new(30)
+    @button_font = Gosu::Font.new(20)
     @track_font = Gosu::Font.new(20)
+  end
+
+  def initialize_variables
     @catalogue = Catalogue.new("albums.txt")
-    @selected_album = @catalogue.albums[0]
+    @selected_album = nil
     @current_track_index = nil
     @current_song = nil
+  end
 
+  def initialize_positions
     @album_x = 50
     @album_y = 50
     @track_x = 50
     @track_y = 570
   end
 
-  # Plays track at given index of current selected album
   def play_track(track_index)
     return if @selected_album.nil?
 
@@ -151,14 +187,13 @@ class MusicPlayerMain < Gosu::Window
     @current_track_index = track_index
   end
 
-  # Draws a single track, in yellow if it is the currently playing track
   def draw_track(title, xpos, ypos, playing)
     color = playing ? Gosu::Color::YELLOW : Gosu::Color::WHITE
     @track_font.draw_text(title, xpos, ypos, ZOrder::PLAYER, 1.0, 1.0, color)
   end
 
-  # Draws the artwork of a single album and the tracks below it
   def draw_album(album)
+    draw_back_button
     cover_img = Gosu::Image.new(album.cover)
     cover_img.draw(@album_x, @album_y, ZOrder::UI, 1, 1)
     album.tracks.each_with_index do |track, index|
@@ -172,51 +207,75 @@ class MusicPlayerMain < Gosu::Window
     draw_quad(0, 0, TOP_COLOR, 600, 0, TOP_COLOR, 0, 800, BOTTOM_COLOR, 600, 800, BOTTOM_COLOR, ZOrder::BACKGROUND)
   end
 
-  def draw
-    draw_background
-
+  def draw_content
     if @selected_album.nil?
-      # Draw the list of albums
-      # Not relevant for distinction task
-      # draw_albums()
+      draw_album_list
     else
-      # Draw the currently selected album
       draw_album(@selected_album)
     end
   end
 
-  def needs_cursor?
-    true
+  def handle_left_mouse_button
+    if @selected_album.nil?
+      check_album_selection
+    else
+      check_track_selection
+      check_back_button_selection
+    end
   end
 
-  def button_down(id)
-    case id
-    when Gosu::MsLeft
-      if @selected_album.nil?
-        # Check if an album was clicked. Not relevant for distinction task
-        #@catalogue.albums.each_with_index do |album, index|
-        #  if area_clicked?(@album_x, @album_y, @album_x + 200, @album_y + 200)
-        #    @selected_album = album
-        #    break
-        #  end
-        #end
-      else
-        # Check if a track was clicked
-        @selected_album.tracks.each_with_index do |track, index|
-          ypos = @track_y + index * 30
-          if area_clicked?(@track_x, ypos, @track_x + 200, ypos + 30)
-            play_track(index)
-            break
-          end
-        end
+  def area_clicked?(left_x, top_y, right_x, bottom_y)
+    mouse_x >= left_x && mouse_x <= right_x && mouse_y >= top_y && mouse_y <= bottom_y
+  end
+
+  def draw_album_list
+    albums = @catalogue.albums
+    albums.each_with_index do |album, index|
+      column = index % 2
+      row = index/2
+      album_xpos = @album_x + column * 270
+      album_ypos = @album_y + row * 400
+      cover_img = Gosu::Image.new(album.cover)
+      cover_img.draw(album_xpos, album_ypos, ZOrder::UI, 0.5, 0.5)
+      @album_font.draw_text(album.title, album_xpos, album_ypos + 250, ZOrder::UI, 1.0, 1.0)
+    end
+  end
+
+  def check_album_selection
+    albums = @catalogue.albums
+    albums.each_with_index do |album, index|
+      column = index % 2
+      row = index/2
+      album_xpos = @album_x + column * 270
+      album_ypos = @album_y + row * 400
+
+      if area_clicked?(album_xpos, album_ypos, album_xpos + 200, album_ypos + 200)
+        @selected_album = album
+        break
       end
     end
   end
 
-  private
+  def check_track_selection
+    @selected_album.tracks.each_with_index do |track, index|
+      ypos = @track_y + index * 30
+      if area_clicked?(@track_x, ypos, @track_x + 200, ypos + 30)
+        play_track(index)
+        break
+      end
+    end
+  end
 
-  def area_clicked?(left_x, top_y, right_x, bottom_y)
-    mouse_x >= left_x && mouse_x <= right_x && mouse_y >= top_y && mouse_y <= bottom_y
+  def draw_back_button
+    draw_quad(10, 10, Gosu::Color::GRAY, 80, 10, Gosu::Color::GRAY, 10, 40, Gosu::Color::GRAY, 80, 40, Gosu::Color::GRAY, ZOrder::UI)
+    @button_font.draw_text("Back", 20, 15, ZOrder::UI, 1.0, 1.0)
+  end
+
+  def check_back_button_selection
+    if area_clicked?(10, 10, 80, 40)
+      @selected_album = nil
+      @current_song.stop unless @current_song.nil?
+    end
   end
 end
 
