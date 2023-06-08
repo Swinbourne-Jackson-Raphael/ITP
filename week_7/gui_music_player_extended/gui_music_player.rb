@@ -135,7 +135,7 @@ class MusicPlayerMain < Gosu::Window
     self.caption = "Music Player"
     initialize_fonts
     initialize_variables
-    initialize_positions
+    #initialize_positions
     initialize_album_grid
   end
 
@@ -157,9 +157,13 @@ class MusicPlayerMain < Gosu::Window
 
   private
 
+  # INITIALIZE METHODS
+  # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
   def initialize_fonts
-    @album_font = Gosu::Font.new(30)
-    @button_font = Gosu::Font.new(20)
+    @album_font = Gosu::Font.new(35)
+    @button_font = Gosu::Font.new(45)
+    @info_font = Gosu::Font.new(25)
     @track_font = Gosu::Font.new(20)
   end
 
@@ -174,7 +178,7 @@ class MusicPlayerMain < Gosu::Window
     @album_x = 50
     @album_y = 50
     @track_x = 50
-    @track_y = 300
+    @track_y = 310
   end
 
   def initialize_album_grid
@@ -183,57 +187,8 @@ class MusicPlayerMain < Gosu::Window
     @albums_per_column = (SCREEN_HEIGHT - ALBUM_SPACING * 2) / (ALBUM_HEIGHT + ALBUM_SPACING)
   end
 
-  def play_track(track_index)
-    return if @selected_album.nil?
-
-    track = @selected_album.tracks[track_index]
-    @current_song = Gosu::Song.new(track.location)
-    @current_song.play(false)
-    @current_track_index = track_index
-  end
-
-  def draw_track(title, xpos, ypos, playing)
-    color = playing ? Gosu::Color::YELLOW : Gosu::Color::WHITE
-    @track_font.draw_text(title, xpos, ypos, ZOrder::PLAYER, 1.0, 1.0, color)
-  end
-  
-  def draw_album(album)
-    draw_back_button
-    cover_img = Gosu::Image.new(album.cover)
-    cover_img.draw(@album_x, @album_y, ZOrder::UI, 0.5, 0.5)
-  
-    album.tracks.each_with_index do |track, index|
-      ypos = @track_y + index * (@track_font.height + 5)
-      playing = @current_track_index == index
-      draw_track(track.name, @track_x, ypos, playing)
-    end
-  end
-
-  def draw_background
-    draw_quad(0, 0, TOP_COLOR, SCREEN_WIDTH, 0, TOP_COLOR, 0, SCREEN_HEIGHT, BOTTOM_COLOR, SCREEN_WIDTH, SCREEN_HEIGHT, BOTTOM_COLOR, ZOrder::BACKGROUND)
-  end
-
-  def draw_content
-    if @selected_album.nil?
-      draw_album_list
-    else
-      draw_album(@selected_album)
-    end
-  end
-
-  def handle_left_mouse_button
-    if @selected_album.nil?
-      check_album_selection
-    else
-      check_track_selection
-      check_back_button_selection
-    end
-  end
-
-  def area_clicked?(left_x, top_y, right_x, bottom_y)
-    mouse_x >= left_x && mouse_x <= right_x && mouse_y >= top_y && mouse_y <= bottom_y
-  end
-
+  # ALBUM LIST - UI SCREEN
+  # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   def draw_album_list
     albums = @catalogue.albums
     albums.each_with_index do |album, index|
@@ -261,26 +216,123 @@ class MusicPlayerMain < Gosu::Window
     end
   end
 
+  # SELECTED ALBUM - UI SCREEN
+  # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   
+  # Draws a given album cover, information, and tracklist.
+  def draw_album(album)
+
+    # Draw album cover
+    draw_back_button
+    cover_img = Gosu::Image.new(album.cover)
+    cover_img.draw(ALBUM_SPACING, ALBUM_SPACING, ZOrder::UI, 0.5, 0.5)
+    
+    # Draw album information
+    album_info_x = ALBUM_SPACING + ALBUM_WIDTH + ALBUM_SPACING
+    album_info_y = ALBUM_SPACING
+    @album_font.draw_text(album.title, album_info_x, album_info_y, ZOrder::UI, 1.0, 1.0)
+    artist_genre_x = album_info_x
+    artist_genre_y = album_info_y + @album_font.height + 5
+    artist_genre_text = "#{album.artist} - #{GENRE_NAMES[album.genre]}"
+    @info_font.draw_text(artist_genre_text, artist_genre_x, artist_genre_y, ZOrder::UI, 1.0, 1.0)
+    
+    # Draw white line seperating album info from tracks
+    line_x1 = album_info_x
+    line_x2 = line_x1 + ALBUM_WIDTH
+    line_y = artist_genre_y + @button_font.height + 10
+    draw_line(line_x1, line_y, Gosu::Color::WHITE, line_x2, line_y, Gosu::Color::WHITE, ZOrder::UI)
+
+    # Draw tracks
+    tracks_x = album_info_x
+    tracks_y = line_y + 10
+    album.tracks.each_with_index do |track, index|
+      track_ypos = tracks_y + index * (@track_font.height + 5)
+      playing = @current_track_index == index
+      draw_track(track.name, tracks_x, track_ypos, playing)
+    end
+  end
+
+  # Draws a back button at the bottom left of the screen
+  def draw_back_button
+    button_width = 70
+    button_height = 30
+    button_x = ALBUM_SPACING
+    button_y = SCREEN_HEIGHT - button_height - ALBUM_SPACING
+    @button_font.draw_text(" << ", button_x + 10, button_y + 5, ZOrder::UI, 1.0, 1.0)
+  end
+  
+  # Checks to see if the back button was clicked. If so, go back to album list
+  def check_back_button_selection
+    button_width = 70
+    button_height = 30
+    button_x = ALBUM_SPACING
+    button_y = SCREEN_HEIGHT - ALBUM_SPACING - button_height
+  
+    if area_clicked?(button_x, button_y, button_x + button_width, button_y + button_height)
+      @selected_album = nil
+      @current_track_index = nil
+      @current_song.stop unless @current_song.nil?
+    end
+  end
+
+  # Draws track title at given position. Draw in yellow if track is playing
+  def draw_track(title, xpos, ypos, playing)
+    color = playing ? Gosu::Color::YELLOW : Gosu::Color::WHITE
+    @track_font.draw_text(title, xpos, ypos, ZOrder::PLAYER, 1.0, 1.0, color)
+  end
+
+  # Checks to see if any of the tracks were clicked. If so, play the track.
   def check_track_selection
+    tracks_y = ALBUM_SPACING + @album_font.height + 5 + @button_font.height + 10 + 10
     @selected_album.tracks.each_with_index do |track, index|
-      ypos = @track_y + index * 30
-      if area_clicked?(@track_x, ypos, @track_x + 200, ypos + 30)
+      track_ypos = tracks_y + index * (@track_font.height + 5)
+      if area_clicked?(ALBUM_SPACING + ALBUM_WIDTH + ALBUM_SPACING, track_ypos, ALBUM_SPACING + ALBUM_WIDTH + ALBUM_SPACING + ALBUM_WIDTH, track_ypos + @track_font.height)
         play_track(index)
         break
       end
     end
   end
 
-  def draw_back_button
-    draw_quad(10, 10, Gosu::Color::GRAY, 80, 10, Gosu::Color::GRAY, 10, 40, Gosu::Color::GRAY, 80, 40, Gosu::Color::GRAY, ZOrder::UI)
-    @button_font.draw_text("Back", 20, 15, ZOrder::UI, 1.0, 1.0)
+  # OTHER METHODS
+  # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  
+  # Plays the given track index of the currently selected album
+  def play_track(track_index)
+    return if @selected_album.nil?
+
+    track = @selected_album.tracks[track_index]
+    @current_song = Gosu::Song.new(track.location)
+    @current_song.play(false)
+    @current_track_index = track_index
   end
 
-  def check_back_button_selection
-    if area_clicked?(10, 10, 80, 40)
-      @selected_album = nil
-      @current_song.stop unless @current_song.nil?
+  # Draws a background gradient
+  def draw_background
+    draw_quad(0, 0, TOP_COLOR, SCREEN_WIDTH, 0, TOP_COLOR, 0, SCREEN_HEIGHT, BOTTOM_COLOR, SCREEN_WIDTH, SCREEN_HEIGHT, BOTTOM_COLOR, ZOrder::BACKGROUND)
+  end
+
+  # Determines which UI screen to display based on whether an album is selected
+  def draw_content
+    if @selected_album.nil?
+      draw_album_list
+    else
+      draw_album(@selected_album)
     end
+  end
+
+  # Calls appropriate UI click check methods based on current screen
+  def handle_left_mouse_button
+    if @selected_album.nil?
+      check_album_selection
+    else
+      check_track_selection
+      check_back_button_selection
+    end
+  end
+
+  # Return true if the given area matches location of mouse
+  def area_clicked?(left_x, top_y, right_x, bottom_y)
+    mouse_x >= left_x && mouse_x <= right_x && mouse_y >= top_y && mouse_y <= bottom_y
   end
 end
 
