@@ -1,14 +1,7 @@
 require 'rubygems'
 require 'gosu'
 
-SCREEN_WIDTH = 600
-SCREEN_HEIGHT = 800
-ALBUM_WIDTH = 250
-ALBUM_HEIGHT = 250
-ALBUM_SPACING = 20
 GENRE_NAMES = ['Null', 'Pop', 'Classic', 'Jazz', 'Rock']
-TOP_COLOR = Gosu::Color.new(0xFF1EB1FA)
-BOTTOM_COLOR = Gosu::Color.new(0xFF1D4DB5)
 
 module ZOrder
   BACKGROUND, PLAYER, UI = *0..2
@@ -128,16 +121,22 @@ class Track
   end
 end
 
-class MusicPlayerMain < Gosu::Window
+SCREEN_WIDTH = 600
+SCREEN_HEIGHT = 600
+ALBUM_WIDTH = 250
+ALBUM_HEIGHT = 250
+ALBUM_SPACING = 25
+TOP_COLOR = Gosu::Color.new(0xFF1EB1FA)
+BOTTOM_COLOR = Gosu::Color.new(0xFF1D4DB5)
 
-  # CORE GOSU METHODS 
-  # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+class MusicPlayerMain < Gosu::Window
   def initialize
-    super(600, 800)
+    super(SCREEN_WIDTH, SCREEN_HEIGHT)
     self.caption = "Music Player"
     initialize_fonts
     initialize_variables
     initialize_positions
+    initialize_album_grid
   end
 
   def needs_cursor?
@@ -178,6 +177,12 @@ class MusicPlayerMain < Gosu::Window
     @track_y = 570
   end
 
+  def initialize_album_grid
+    available_width = SCREEN_WIDTH - ALBUM_SPACING * 2
+    @albums_per_row = available_width / (ALBUM_WIDTH + ALBUM_SPACING)
+    @albums_per_column = (SCREEN_HEIGHT - ALBUM_SPACING * 2) / (ALBUM_HEIGHT + ALBUM_SPACING)
+  end
+
   def play_track(track_index)
     return if @selected_album.nil?
 
@@ -204,7 +209,7 @@ class MusicPlayerMain < Gosu::Window
   end
 
   def draw_background
-    draw_quad(0, 0, TOP_COLOR, 600, 0, TOP_COLOR, 0, 800, BOTTOM_COLOR, 600, 800, BOTTOM_COLOR, ZOrder::BACKGROUND)
+    draw_quad(0, 0, TOP_COLOR, SCREEN_WIDTH, 0, TOP_COLOR, 0, SCREEN_HEIGHT, BOTTOM_COLOR, SCREEN_WIDTH, SCREEN_HEIGHT, BOTTOM_COLOR, ZOrder::BACKGROUND)
   end
 
   def draw_content
@@ -231,25 +236,24 @@ class MusicPlayerMain < Gosu::Window
   def draw_album_list
     albums = @catalogue.albums
     albums.each_with_index do |album, index|
-      column = index % 2
-      row = index/2
-      album_xpos = @album_x + column * 270
-      album_ypos = @album_y + row * 400
+      row = index/@albums_per_row
+      column = index % @albums_per_row
+      album_xpos = ALBUM_SPACING + column * (ALBUM_WIDTH + ALBUM_SPACING)
+      album_ypos = ALBUM_SPACING + row * (ALBUM_HEIGHT + ALBUM_SPACING)
       cover_img = Gosu::Image.new(album.cover)
       cover_img.draw(album_xpos, album_ypos, ZOrder::UI, 0.5, 0.5)
-      @album_font.draw_text(album.title, album_xpos, album_ypos + 250, ZOrder::UI, 1.0, 1.0)
     end
   end
 
   def check_album_selection
     albums = @catalogue.albums
     albums.each_with_index do |album, index|
-      column = index % 2
-      row = index/2
-      album_xpos = @album_x + column * 270
-      album_ypos = @album_y + row * 400
+      row = index/@albums_per_row
+      column = index % @albums_per_row
+      album_xpos = ALBUM_SPACING + column * (ALBUM_WIDTH + ALBUM_SPACING)
+      album_ypos = ALBUM_SPACING + row * (ALBUM_HEIGHT + ALBUM_SPACING)
 
-      if area_clicked?(album_xpos, album_ypos, album_xpos + 200, album_ypos + 200)
+      if area_clicked?(album_xpos, album_ypos, album_xpos + ALBUM_WIDTH, album_ypos + ALBUM_HEIGHT)
         @selected_album = album
         break
       end
@@ -280,3 +284,4 @@ class MusicPlayerMain < Gosu::Window
 end
 
 MusicPlayerMain.new.show if __FILE__ == $0
+
