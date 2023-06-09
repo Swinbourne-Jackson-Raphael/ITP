@@ -352,7 +352,6 @@ class MusicPlayerMain < Gosu::Window
     end
   end
   
-
   # Draws a back button at the bottom left of the screen
   def draw_back_button
     button_width = 70
@@ -376,7 +375,10 @@ class MusicPlayerMain < Gosu::Window
       if click_x >= 0 && click_x <= button_width
         @selected_album = nil
         @current_track_index = nil
-        @current_song.stop unless @current_song.nil?
+        if @current_song
+          @current_song.stop
+          @current_song = nil
+        end
       end
     end
   end
