@@ -289,11 +289,10 @@ class MusicPlayerMain < Gosu::Window
   # SELECTED ALBUM - UI SCREEN
   # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
    
-  # Draws a given album cover, information, and tracklist.
+  # Draws all the UI needed for the selected album page.
   def draw_album(album)
 
     # Draw album cover
-    draw_back_button
     cover_img = Gosu::Image.new(album.cover)
     cover_img.draw(ALBUM_SPACING, ALBUM_SPACING, ZOrder::UI, 0.5, 0.5)
     
@@ -312,82 +311,33 @@ class MusicPlayerMain < Gosu::Window
     line_y = artist_genre_y + @button_font.height + 10
     draw_line(line_x1, line_y, Gosu::Color::WHITE, line_x2, line_y, Gosu::Color::WHITE, ZOrder::UI)
 
-    # Draw tracks
+    # Draw tracks. Current track is highlighted in yellow
     tracks_x = album_info_x
     tracks_y = line_y + 10
     album.tracks.each_with_index do |track, index|
       track_ypos = tracks_y + index * (@track_font.height + 5)
       playing = @current_track_index == index
-      draw_track(track.name, tracks_x, track_ypos, playing)
+      color = playing ? Gosu::Color::YELLOW : Gosu::Color::WHITE
+      @track_font.draw_text(track.name, tracks_x, track_ypos, ZOrder::PLAYER, 1.0, 1.0, color)
     end
 
+    # Draw pause/resume button below album cover
     if @selected_album && @current_song
-      # Draw pause/resume button on the row below album cover
-      button_width = 70
-      button_height = 30
+      button_text = @current_song.paused? ? "Resume" : "Pause"
+      button_width = @button_font.text_width(button_text)
+      button_height = @button_font.height
       button_x = ALBUM_SPACING
       button_y = ALBUM_SPACING + ALBUM_HEIGHT + ALBUM_SPACING
-      if @current_song.paused?
-        @button_font.draw_text("Resume", button_x + 10, button_y + 5, ZOrder::UI, 1.0, 1.0)
-      else
-        @button_font.draw_text("Pause", button_x + 10, button_y + 5, ZOrder::UI, 1.0, 1.0)
-      end
+      @button_font.draw_text(button_text, button_x, button_y, ZOrder::UI, 1.0, 1.0)
     end
-  end
 
-  # Checks if pause/resume button has been clicked and toggles the song state
-  def check_pause_button_selection
-    if @selected_album && @current_song
-      button_width = 70
-      button_height = 30
-      button_x = ALBUM_SPACING
-      button_y = ALBUM_SPACING + ALBUM_HEIGHT + ALBUM_SPACING
-      if area_clicked?(button_x, button_y, button_x + button_width, button_y + button_height)
-        if @current_song.paused?
-          @current_song.play
-        else
-          @current_song.pause
-        end
-      end
-    end
-  end
-  
-  # Draws a back button at the bottom left of the screen
-  def draw_back_button
-    button_width = 70
-    button_height = 30
+    # Draw back button at the bottom left of the screen
+    button_text = " << "
+    button_width = @button_font.text_width(button_text)
+    button_height = @button_font.height
     button_x = ALBUM_SPACING
     button_y = SCREEN_HEIGHT - button_height - ALBUM_SPACING
-    @button_font.draw_text(" << ", button_x + 10, button_y + 5, ZOrder::UI, 1.0, 1.0)
-  end
-  
-  # Checks to see if the back button was clicked. If so, go back to the album list
-  def check_back_button_selection
-    button_width = 70
-    button_height = 30
-    button_x = ALBUM_SPACING
-    button_y = SCREEN_HEIGHT - ALBUM_SPACING - button_height
-    font_x = button_x + 10
-
-    if area_clicked?(button_x, button_y, button_x + button_width, button_y + button_height)
-      click_x = mouse_x - font_x
-
-      if click_x >= 0 && click_x <= button_width
-        @selected_album = nil
-        @current_track_index = nil
-        if @current_song
-          @current_song.stop
-          @current_song = nil
-        end
-      end
-    end
-  end
-
-
-  # Draws track title at given position. Draw in yellow if track is playing
-  def draw_track(title, xpos, ypos, playing)
-    color = playing ? Gosu::Color::YELLOW : Gosu::Color::WHITE
-    @track_font.draw_text(title, xpos, ypos, ZOrder::PLAYER, 1.0, 1.0, color)
+    @button_font.draw_text(button_text, button_x + 10, button_y + 5, ZOrder::UI, 1.0, 1.0)
   end
 
   # Checks to see if any of the tracks were clicked. If so, play the track.
@@ -399,6 +349,37 @@ class MusicPlayerMain < Gosu::Window
         play_track(index)
         break
       end
+    end
+  end
+
+  # Checks if pause/resume button has been clicked and toggles the song state
+  def check_pause_button_selection
+    if @selected_album && @current_song
+      button_text = @current_song.paused? ? "Resume" : "Pause"
+      button_width = @button_font.text_width(button_text)
+      button_height = @button_font.height
+      button_x = ALBUM_SPACING
+      button_y = ALBUM_SPACING + ALBUM_HEIGHT + ALBUM_SPACING
+      if area_clicked?(button_x, button_y, button_x + button_width, button_y + button_height)
+        @current_song.paused? ? @current_song.play : @current_song.pause
+      end
+    end
+  end
+  
+  # Checks to see if the back button was clicked. If so, go back to the album list
+  def check_back_button_selection
+    button_text = " << "
+    button_width = @button_font.text_width(button_text)
+    button_height = @button_font.height
+    button_x = ALBUM_SPACING
+    button_y = SCREEN_HEIGHT - ALBUM_SPACING - button_height
+    if area_clicked?(button_x, button_y, button_x + button_width, button_y + button_height)
+        @selected_album = nil
+        @current_track_index = nil
+        if @current_song
+          @current_song.stop
+          @current_song = nil
+        end
     end
   end
 
