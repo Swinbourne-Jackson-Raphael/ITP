@@ -122,7 +122,7 @@ class Track
 end
 
 SCREEN_WIDTH = 600
-SCREEN_HEIGHT = 600
+SCREEN_HEIGHT = 650
 ALBUM_WIDTH = 250
 ALBUM_HEIGHT = 250
 ALBUM_SPACING = 25
@@ -135,7 +135,6 @@ class MusicPlayerMain < Gosu::Window
     self.caption = "Music Player"
     initialize_fonts
     initialize_variables
-    #initialize_positions
     initialize_album_grid
   end
 
@@ -149,6 +148,15 @@ class MusicPlayerMain < Gosu::Window
       handle_left_mouse_button
     end
   end
+
+  def update
+
+    # Update elapsed time if a song is playing
+    if @current_song && @current_song.playing?
+      @elapsed_time += Gosu::milliseconds / 1000.0
+    end
+  end
+  
 
   def draw
     draw_background
@@ -169,9 +177,11 @@ class MusicPlayerMain < Gosu::Window
 
   def initialize_variables
     @catalogue = Catalogue.new("albums.txt")
+    @current_page = 0
     @selected_album = nil
     @current_track_index = nil
     @current_song = nil
+    @elapsed_time = 0
   end
 
   def initialize_positions
@@ -185,13 +195,21 @@ class MusicPlayerMain < Gosu::Window
     available_width = SCREEN_WIDTH - ALBUM_SPACING * 2
     @albums_per_row = available_width / (ALBUM_WIDTH + ALBUM_SPACING)
     @albums_per_column = (SCREEN_HEIGHT - ALBUM_SPACING * 2) / (ALBUM_HEIGHT + ALBUM_SPACING)
+    @rows_per_page = (SCREEN_HEIGHT - 2 * ALBUM_SPACING) / (ALBUM_HEIGHT + ALBUM_SPACING)
+    @albums_per_page = @albums_per_row * @rows_per_page
   end
 
   # ALBUM LIST - UI SCREEN
   # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  
+  # Draws a grid of albums
   def draw_album_list
     albums = @catalogue.albums
-    albums.each_with_index do |album, index|
+    start_index = @current_page * @albums_per_page
+    end_index = start_index + @albums_per_page - 1
+    albums_to_display = albums[start_index..end_index]
+
+    albums_to_display.each_with_index do |album, index|
       row = index/@albums_per_row
       column = index % @albums_per_row
       album_xpos = ALBUM_SPACING + column * (ALBUM_WIDTH + ALBUM_SPACING)
@@ -199,11 +217,18 @@ class MusicPlayerMain < Gosu::Window
       cover_img = Gosu::Image.new(album.cover)
       cover_img.draw(album_xpos, album_ypos, ZOrder::UI, 0.5, 0.5)
     end
+
+    draw_page_navigation
   end
 
+  # Checks if an album has been clicked, opens the album if so
   def check_album_selection
     albums = @catalogue.albums
-    albums.each_with_index do |album, index|
+    start_index = @current_page * @albums_per_page
+    end_index = start_index + @albums_per_page - 1
+    albums_to_check = albums[start_index..end_index]
+
+    albums_to_check.each_with_index do |album, index|
       row = index/@albums_per_row
       column = index % @albums_per_row
       album_xpos = ALBUM_SPACING + column * (ALBUM_WIDTH + ALBUM_SPACING)
@@ -214,6 +239,51 @@ class MusicPlayerMain < Gosu::Window
         break
       end
     end
+  end
+
+  # Draws two navigation buttons at the bottom of the page to scroll through albums
+  def draw_page_navigation
+    button_width = 30
+    button_height = 30
+    navigation_width = 2 * button_width + ALBUM_SPACING
+    navigation_x = (SCREEN_WIDTH - navigation_width) / 2 - 20
+    button_y = SCREEN_HEIGHT - ALBUM_SPACING - button_height
+  
+    # Draw backward button
+    @button_font.draw_text("<", navigation_x + 10, button_y + 5, ZOrder::UI, 1.0, 1.0)
+  
+    # Draw forward button
+    @button_font.draw_text(">", navigation_x + button_width + ALBUM_SPACING + 10, button_y + 5, ZOrder::UI, 1.0, 1.0)
+  end
+  
+  # Check if the page navigation buttons are clicked
+  def check_page_navigation_selection
+    button_width = 30
+    button_height = 30
+    navigation_width = 2 * button_width + ALBUM_SPACING
+    navigation_x = (SCREEN_WIDTH - navigation_width) / 2 - 20
+    button_y = SCREEN_HEIGHT - ALBUM_SPACING - button_height
+    font_x = navigation_x + 10
+    
+    # Check navigation buttons
+    if area_clicked?(navigation_x, button_y, navigation_x + navigation_width, button_y + button_height)
+      click_x = mouse_x - font_x
+    
+      if click_x < button_width
+        go_to_previous_page
+      elsif click_x > button_width + ALBUM_SPACING
+        go_to_next_page
+      end
+    end
+  end
+
+  # Handle page navigation
+  def go_to_next_page
+    @current_page += 1 if (@current_page + 1) * @albums_per_page < @catalogue.albums.length
+  end
+
+  def go_to_previous_page
+    @current_page -= 1 if @current_page > 0
   end
 
   # SELECTED ALBUM - UI SCREEN
@@ -250,6 +320,7 @@ class MusicPlayerMain < Gosu::Window
       playing = @current_track_index == index
       draw_track(track.name, tracks_x, track_ypos, playing)
     end
+
   end
 
   # Draws a back button at the bottom left of the screen
@@ -261,19 +332,25 @@ class MusicPlayerMain < Gosu::Window
     @button_font.draw_text(" << ", button_x + 10, button_y + 5, ZOrder::UI, 1.0, 1.0)
   end
   
-  # Checks to see if the back button was clicked. If so, go back to album list
+  # Checks to see if the back button was clicked. If so, go back to the album list
   def check_back_button_selection
     button_width = 70
     button_height = 30
     button_x = ALBUM_SPACING
     button_y = SCREEN_HEIGHT - ALBUM_SPACING - button_height
-  
+    font_x = button_x + 10
+
     if area_clicked?(button_x, button_y, button_x + button_width, button_y + button_height)
-      @selected_album = nil
-      @current_track_index = nil
-      @current_song.stop unless @current_song.nil?
+      click_x = mouse_x - font_x
+
+      if click_x >= 0 && click_x <= button_width
+        @selected_album = nil
+        @current_track_index = nil
+        @current_song.stop unless @current_song.nil?
+      end
     end
   end
+
 
   # Draws track title at given position. Draw in yellow if track is playing
   def draw_track(title, xpos, ypos, playing)
@@ -295,11 +372,10 @@ class MusicPlayerMain < Gosu::Window
 
   # OTHER METHODS
   # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  
+
   # Plays the given track index of the currently selected album
   def play_track(track_index)
     return if @selected_album.nil?
-
     track = @selected_album.tracks[track_index]
     @current_song = Gosu::Song.new(track.location)
     @current_song.play(false)
@@ -324,6 +400,7 @@ class MusicPlayerMain < Gosu::Window
   def handle_left_mouse_button
     if @selected_album.nil?
       check_album_selection
+      check_page_navigation_selection
     else
       check_track_selection
       check_back_button_selection
