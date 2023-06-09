@@ -149,15 +149,6 @@ class MusicPlayerMain < Gosu::Window
     end
   end
 
-  def update
-
-    # Update elapsed time if a song is playing
-    if @current_song && @current_song.playing?
-      @elapsed_time += Gosu::milliseconds / 1000.0
-    end
-  end
-  
-
   def draw
     draw_background
     draw_content
@@ -181,14 +172,7 @@ class MusicPlayerMain < Gosu::Window
     @selected_album = nil
     @current_track_index = nil
     @current_song = nil
-    @elapsed_time = 0
-  end
-
-  def initialize_positions
-    @album_x = 50
-    @album_y = 50
-    @track_x = 50
-    @track_y = 310
+    @current_screen = :album_list
   end
 
   def initialize_album_grid
@@ -236,6 +220,7 @@ class MusicPlayerMain < Gosu::Window
 
       if area_clicked?(album_xpos, album_ypos, album_xpos + ALBUM_WIDTH, album_ypos + ALBUM_HEIGHT)
         @selected_album = album
+        @current_screen = :selected_album
         break
       end
     end
@@ -380,7 +365,15 @@ class MusicPlayerMain < Gosu::Window
           @current_song.stop
           @current_song = nil
         end
+        @current_screen = :album_list
     end
+  end
+
+  #  SETTINGS - UI SCREEN
+  # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  def draw_settings_screen
+    # Additional settings drawing code can be added here
   end
 
   # OTHER METHODS
@@ -400,24 +393,30 @@ class MusicPlayerMain < Gosu::Window
     draw_quad(0, 0, TOP_COLOR, SCREEN_WIDTH, 0, TOP_COLOR, 0, SCREEN_HEIGHT, BOTTOM_COLOR, SCREEN_WIDTH, SCREEN_HEIGHT, BOTTOM_COLOR, ZOrder::BACKGROUND)
   end
 
-  # Determines which UI screen to display based on whether an album is selected
+  # Determines which UI screen to display
   def draw_content
-    if @selected_album.nil?
+    case @current_screen
+    when :album_list
       draw_album_list
-    else
+    when :selected_album
       draw_album(@selected_album)
+    when :settings
+      draw_settings_screen
     end
   end
 
   # Calls appropriate UI click check methods based on current screen
   def handle_left_mouse_button
-    if @selected_album.nil?
+    case @current_screen
+    when :album_list
       check_album_selection
       check_page_navigation_selection
-    else
+    when :selected_album
       check_track_selection
       check_back_button_selection
       check_pause_button_selection
+    when :settings
+      check_back_button_selection
     end
   end
 
