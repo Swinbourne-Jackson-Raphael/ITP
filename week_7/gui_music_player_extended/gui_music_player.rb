@@ -321,7 +321,37 @@ class MusicPlayerMain < Gosu::Window
       draw_track(track.name, tracks_x, track_ypos, playing)
     end
 
+    if @selected_album && @current_song
+      # Draw pause/resume button on the row below album cover
+      button_width = 70
+      button_height = 30
+      button_x = ALBUM_SPACING
+      button_y = ALBUM_SPACING + ALBUM_HEIGHT + ALBUM_SPACING
+      if @current_song.paused?
+        @button_font.draw_text("Resume", button_x + 10, button_y + 5, ZOrder::UI, 1.0, 1.0)
+      else
+        @button_font.draw_text("Pause", button_x + 10, button_y + 5, ZOrder::UI, 1.0, 1.0)
+      end
+    end
   end
+
+  # Checks if pause/resume button has been clicked and toggles the song state
+  def check_pause_button_selection
+    if @selected_album && @current_song
+      button_width = 70
+      button_height = 30
+      button_x = ALBUM_SPACING
+      button_y = ALBUM_SPACING + ALBUM_HEIGHT + ALBUM_SPACING
+      if area_clicked?(button_x, button_y, button_x + button_width, button_y + button_height)
+        if @current_song.paused?
+          @current_song.play
+        else
+          @current_song.pause
+        end
+      end
+    end
+  end
+  
 
   # Draws a back button at the bottom left of the screen
   def draw_back_button
@@ -404,6 +434,7 @@ class MusicPlayerMain < Gosu::Window
     else
       check_track_selection
       check_back_button_selection
+      check_pause_button_selection
     end
   end
 
