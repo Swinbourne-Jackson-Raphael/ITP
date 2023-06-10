@@ -41,6 +41,11 @@ def angle_to_dir_vector(angle)
     return Vector[x, y]
 end
 
+# Covert a directional 2D vector to an angle.
+def dir_vector_to_angle(direction)
+    return Math.atan2(direction[1], direction[0])
+end
+
 # Calculate a world direction from the difference between two angles.
 def angle_diff_to_world_dir(a1, a2)
     angle_to_dir_vector(a1 - a2)

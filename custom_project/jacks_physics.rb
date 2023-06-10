@@ -43,7 +43,6 @@ class CircleCollider
     
   end
 
-
   # Draw a red circle representing this collider
   def draw_debug
     @debug_img.draw(pos[0] - radius, pos[1] - radius, ZOrder::MIDDLE, 1, 1, @debug_colour)
@@ -53,10 +52,11 @@ end
 
 # A complex collider made up of circle colliders.
 class Collider
-  attr_accessor :circle_colliders
+  attr_accessor :circle_colliders, :attached_obj
 
-  def initialize (circle_colliders)
+  def initialize (circle_colliders, attached_obj)
     @circle_colliders = circle_colliders
+    @attached_obj = attached_obj
   end
 
   # Check if any collission of this collider with all circle colliders of the other collider

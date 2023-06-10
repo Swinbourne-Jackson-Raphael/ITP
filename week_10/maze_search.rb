@@ -60,49 +60,37 @@ class GameWindow < Gosu::Window
       column_index += 1
     end
 
-    # pupulate cells with references to neighbouring cells.
-    c = 0 
-    while (c < @columns.length)
-      r = 0
-      while (r < @columns[c].length)
+    # now set up the neighbour links
+    # You need to do this using a while loop with another
+    # nested while loop inside.
+    # Set up the neighbor links
+    column_index = 0
+    while column_index < x_cell_count
+      row_index = 0
+      while row_index < y_cell_count
+        cell = @columns[column_index][row_index]
 
-          # north neighbour 
-          if(c - 1 >= 0) 
-              @columns[c][r].north = @columns[c - 1][r]
-          end
-          # east neighbour
-          if(r + 1 < @columns[c].length) 
-              @columns[c][r].east = @columns[c][r + 1]
-          end
-          # south neighbour
-          if (c + 1 < @columns.length) 
-              @columns[c][r].south = @columns[c + 1][r]
-          end   
-          # west neighbour
-          if(r - 1 >= 0)      
-              @columns[c][r].west = @columns[c][r - 1]
-          end
-        
-          r += 1
+        # Set the north neighbor
+        if row_index > 0
+          cell.north = @columns[column_index][row_index - 1]
+        end
+        # Set the south neighbor
+        if row_index < y_cell_count - 1
+          cell.south = @columns[column_index][row_index + 1]
+        end
+        # Set the east neighbor
+        if column_index < x_cell_count - 1
+          cell.east = @columns[column_index + 1][row_index]
+        end
+        # Set the west neighbor
+        if column_index > 0
+          cell.west = @columns[column_index - 1][row_index]
+        end
+        row_index += 1
       end
+      column_index += 1
+    end
 
-      c += 1
-    end  
-  end
-
-  def print_cells
-    c = 0
-    #print cells
-    while (c < @columns.length)
-      r = 0
-      while (r < @columns[c].length)
-        cell = @columns[c][r]
-        puts("Cell x: #{c}, y: #{r}, north:#{cell.north ? 1 : 0}  south:#{cell.south ? 1 : 0}  east:#{cell.east ? 1 : 0}  west:#{cell.west ? 1 : 0}")
-        r+=1
-      end
-      puts("----------------------- End of Column -----------------------")
-      c+=1
-    end   
   end
 
   # this is called by Gosu to see if should show the cursor (or mouse)
@@ -134,9 +122,13 @@ class GameWindow < Gosu::Window
   # Completing this function is NOT NECESSARY for the Maze Creation task
   # complete the following for the Maze Search task - after
   # we cover Recusion in the lectures.
-
-  # But you DO need to complete it later for the Maze Search task
   def search(cell_x ,cell_y)
+
+    # If cell already visited, return nil (dead end)
+    return nil if @columns[cell_x][cell_y].visited
+
+    # Mark the current cell as visited
+    @columns[cell_x][cell_y].visited = true
 
     dead_end = false
     path_found = false
@@ -157,11 +149,23 @@ class GameWindow < Gosu::Window
         puts "Searching. In cell x: " + cell_x.to_s + " y: " + cell_y.to_s
       end
 
-      # INSERT MISSING CODE HERE!! You need to have 4 'if' tests to
-      # check each surrounding cell. Make use of the attributes for
-      # cells such as vacant, visited and on_path.
-      # Cells on the outer boundaries will always have a nil on the
-      # boundary side
+      # Check each surrounding cell
+      if @columns[cell_x][cell_y].north&.vacant && !@columns[cell_x][cell_y].north&.visited
+        north_path = search(cell_x, cell_y - 1)
+      end
+
+      if @columns[cell_x][cell_y].west&.vacant && !@columns[cell_x][cell_y].west&.visited
+        west_path = search(cell_x - 1, cell_y)
+      end
+
+      if @columns[cell_x][cell_y].east&.vacant && !@columns[cell_x][cell_y].east&.visited
+        east_path = search(cell_x + 1, cell_y)
+      end
+
+      if @columns[cell_x][cell_y].south&.vacant && !@columns[cell_x][cell_y].south&.visited
+        south_path = search(cell_x, cell_y + 1)
+      end
+
 
       # pick one of the possible paths that is not nil (if any):
       if (north_path != nil)
@@ -190,9 +194,8 @@ class GameWindow < Gosu::Window
   end
 
   # Reacts to button press
-  # Left click marks a cell vacant
-  # Right click starts a path search from the clicked cell
-  # Spacebar prints cells to console
+  # left button marks a cell vacant
+  # Right button starts a path search from the clicked cell
   def button_down(id)
     case id
       when Gosu::MsLeft
@@ -204,10 +207,7 @@ class GameWindow < Gosu::Window
       when Gosu::MsRight
         cell = mouse_over_cell(mouse_x, mouse_y)
         @path = search(cell[0],cell[1])
-      when Gosu::KB_SPACE
-        print_cells()
       end
-      
   end
 
   # This will walk along the path setting the on_path for each cell
