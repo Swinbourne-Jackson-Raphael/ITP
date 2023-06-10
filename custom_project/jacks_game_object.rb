@@ -185,7 +185,6 @@ class GameObject
       # Give the player a point if the shark is hit with a cannonball
       if other.is_a?(Cannonball)
         @player.player_score += 1
-        puts "hit"
       end
 
       # Destroy unless the other object is a shark
