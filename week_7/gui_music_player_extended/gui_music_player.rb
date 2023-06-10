@@ -203,27 +203,7 @@ class MusicPlayerMain < Gosu::Window
     end
 
     draw_page_navigation
-
-    # Draw the settings button in the bottom right of the screen
-    button_width = 50
-    button_height = 50
-    button_x = SCREEN_WIDTH - button_width - ALBUM_SPACING
-    button_y = SCREEN_HEIGHT - button_height - ALBUM_SPACING
-    Gosu.draw_rect(button_x, button_y, button_width, button_height, Gosu::Color::GRAY, ZOrder::UI)
   end
-
-  # Check if the settings button is clicked
-  def check_settings_selection
-    button_width = 50
-    button_height = 50
-    button_x = SCREEN_WIDTH - button_width - ALBUM_SPACING
-    button_y = SCREEN_HEIGHT - button_height - ALBUM_SPACING
-
-    if area_clicked?(button_x, button_y, button_x + button_width, button_y + button_height)
-      @current_screen = :settings
-    end
-  end
-
 
   # Checks if an album has been clicked, opens the album if so
   def check_album_selection
@@ -389,60 +369,6 @@ class MusicPlayerMain < Gosu::Window
     end
   end
 
-  #  SETTINGS - UI SCREEN
-  # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-  # Draws all the UI elements needed for the settings screen
-  def draw_settings_screen
-
-    # Draw resolution selector
-    resolution_options = ["800x600", "1024x768", "1280x720"]
-    resolution_rows = (resolution_options.length.to_f / @albums_per_row).ceil
-    resolution_x = ALBUM_SPACING
-    resolution_y = ALBUM_SPACING + resolution_rows * (ALBUM_HEIGHT + ALBUM_SPACING)
-    resolution_spacing = ALBUM_HEIGHT + ALBUM_SPACING + @button_font.height
-
-    resolution_options.each_with_index do |option, index|
-      row = index/@albums_per_row
-      column = index % @albums_per_row
-      resolution_xpos = resolution_x + column * (ALBUM_WIDTH + ALBUM_SPACING)
-      resolution_ypos = resolution_y + row * resolution_spacing
-      selected = option == "#{SCREEN_WIDTH}x#{SCREEN_HEIGHT}"
-      color = selected ? Gosu::Color::GREEN : Gosu::Color::WHITE
-      @button_font.draw_text(option, resolution_xpos, resolution_ypos, ZOrder::UI, 1.0, 1.0, color)
-    end
-
-    # Draw background gradient options
-    gradient_options = [
-      ["#000000", "#FFFFFF"],  # Black to White
-      ["#FF0000", "#00FF00"],  # Red to Green
-      ["#0000FF", "#FFFF00"]   # Blue to Yellow
-    ]
-    gradient_rows = (gradient_options.length.to_f/@albums_per_row).ceil
-    gradient_x = ALBUM_SPACING
-    gradient_y = resolution_y + resolution_rows * resolution_spacing + ALBUM_SPACING
-    gradient_spacing = ALBUM_HEIGHT + ALBUM_SPACING + @button_font.height
-
-    gradient_options.each_with_index do |option, index|
-      row = index/@albums_per_row
-      column = index % @albums_per_row
-      gradient_xpos = gradient_x + column * (ALBUM_WIDTH + ALBUM_SPACING)
-      gradient_ypos = gradient_y + row * gradient_spacing
-      selected = option == [TOP_COLOR, BOTTOM_COLOR]
-      color = selected ? Gosu::Color::GREEN : Gosu::Color::WHITE
-      @button_font.draw_text("Gradient #{index + 1}", gradient_xpos, gradient_ypos, ZOrder::UI, 1.0, 1.0, color)
-    end
-
-    # Draw back button at the bottom left of the screen
-    button_text = " << "
-    button_width = @button_font.text_width(button_text)
-    button_height = @button_font.height
-    button_x = ALBUM_SPACING
-    button_y = SCREEN_HEIGHT - button_height - ALBUM_SPACING
-    @button_font.draw_text(button_text, button_x + 10, button_y + 5, ZOrder::UI, 1.0, 1.0)
-  end
-
-
 
   # OTHER METHODS
   # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -468,8 +394,6 @@ class MusicPlayerMain < Gosu::Window
       draw_album_list
     when :selected_album
       draw_album(@selected_album)
-    when :settings
-      draw_settings_screen
     end
   end
 
@@ -479,13 +403,10 @@ class MusicPlayerMain < Gosu::Window
     when :album_list
       check_album_selection
       check_page_navigation_selection
-      check_settings_selection
     when :selected_album
       check_track_selection
       check_back_button_selection
       check_pause_button_selection
-    when :settings
-      check_back_button_selection
     end
   end
 
@@ -493,6 +414,7 @@ class MusicPlayerMain < Gosu::Window
   def area_clicked?(left_x, top_y, right_x, bottom_y)
     mouse_x >= left_x && mouse_x <= right_x && mouse_y >= top_y && mouse_y <= bottom_y
   end
+
 end
 
 MusicPlayerMain.new.show if __FILE__ == $0
