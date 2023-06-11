@@ -88,6 +88,8 @@ class GameWindow < Gosu::Window
 
       c += 1
     end  
+
+    print_cells()
   end
 
   def print_cells
